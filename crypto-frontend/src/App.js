@@ -10,7 +10,8 @@ import Transactions from "./Transactions";
 import './index.css';
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
 
   useEffect(() => {
     const checkAuth = () => {
@@ -61,15 +62,17 @@ const App = () => {
         </nav>
 
         <div className="p-4">
-          <Routes>
-            <Route path="/signup" element={!isAuthenticated ? <Signup setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
-            <Route path="/login" element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
-            <Route path="/wallet" element={isAuthenticated ? <Wallet /> : <Navigate to="/login" />} />
-            <Route path="/currency/:wallet_id" element={<Currency />} />
-            <Route path="/send/:wallet_id" element={<SendCrypto />} />
-            <Route path="/transactions" element={<Transactions />} />
-          </Routes>
+        <Routes>
+  <Route path="/" element={<Navigate to="/login" />} />
+  <Route path="/signup" element={!isAuthenticated ? <Signup setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
+  <Route path="/login" element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
+  <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+  <Route path="/wallet" element={isAuthenticated ? <Wallet /> : <Navigate to="/login" />} />
+  <Route path="/currency/:wallet_id" element={<Currency />} />
+  <Route path="/send/:wallet_id" element={<SendCrypto />} />
+  <Route path="/transactions" element={<Transactions />} />
+</Routes>
+
         </div>
       </div>
     </Router>
