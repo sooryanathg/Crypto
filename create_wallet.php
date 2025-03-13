@@ -1,85 +1,94 @@
 <?php
 // Allow CORS
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
-header("Content-Type: application/json");
-
-// Allow requests from any origin (adjust as needed)
-header("Access-Control-Allow-Origin: *");
-
-// Allow specific HTTP methods
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-
-// Allow specific headers
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+function set_cors_headers() {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    header("Content-Type: application/json");
+}
 
 // Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-include 'db.php';
-
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!isset($data['user_id']) || !isset($data['currency_type']) || !isset($data['balance'])) {
-    echo json_encode(["status" => "error", "message" => "Missing required fields"]);
-    exit();
+function handle_preflight() {
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit();
+    }
 }
 
-$user_id = $data['user_id'];
-$currency_type = $data['currency_type'];
-$balance = $data['balance'];
+// Establish Database Connection
+function connect_db() {
+    include 'db.php';
+    return isset($conn) ? $conn : null;
+}
+
+// Read and decode JSON input
+function get_request_data() {
+    return json_decode(file_get_contents("php://input"), true);
+}
+
+// Validate input data
+function validate_input($data) {
+    return isset($data['user_id']) && isset($data['currency_type']) && isset($data['balance']);
+}
 
 // Check if user exists
-$userCheck = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
-$userCheck->bind_param("i", $user_id);
-$userCheck->execute();
-$userCheck->store_result();
-
-if ($userCheck->num_rows === 0) {
-    echo json_encode(["status" => "error", "message" => "User not found"]);
-    exit();
+function user_exists($conn, $user_id) {
+    $stmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->store_result();
+    return $stmt->num_rows > 0;
 }
 
 // Insert new wallet
-$stmt = $conn->prepare("INSERT INTO wallet (user_id, currency_type, balance) VALUES (?, ?, ?)");
-$stmt->bind_param("isi", $user_id, $currency_type, $balance);
+function create_wallet($conn, $user_id, $currency_type, $balance) {
+    $stmt = $conn->prepare("INSERT INTO wallet (user_id, currency_type, balance) VALUES (?, ?, ?)");
+    $stmt->bind_param("isi", $user_id, $currency_type, $balance);
+    if ($stmt->execute()) {
+        return $stmt->insert_id;
+    }
+    return false;
+}
 
-if ($stmt->execute()) {
-    $wallet_id = $stmt->insert_id; // Get the newly created wallet ID
-
-    // Set default values for currency
-    $symbol = "";
-    $current_value = 0.00;
-
-    // Define symbols and current values for some known currencies
+// Insert currency details
+function create_currency($conn, $currency_type, $wallet_id) {
     $currency_data = [
         "Bitcoin" => ["symbol" => "₿", "value" => 50000],
         "Ethereum" => ["symbol" => "Ξ", "value" => 3000],
         "Litecoin" => ["symbol" => "Ł", "value" => 150]
     ];
-
-    if (array_key_exists($currency_type, $currency_data)) {
-        $symbol = $currency_data[$currency_type]["symbol"];
-        $current_value = $currency_data[$currency_type]["value"];
-    }
-
-    // Insert currency details into the currency table
-    $stmt2 = $conn->prepare("INSERT INTO currency (currency_type, symbol, current_value, wallet_id) VALUES (?, ?, ?, ?)");
-    $stmt2->bind_param("ssdi", $currency_type, $symbol, $current_value, $wallet_id);
-
-    if ($stmt2->execute()) {
-        echo json_encode(["status" => "success", "message" => "Wallet and currency created successfully"]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Failed to insert currency data"]);
-    }
-
-    $stmt2->close();
-} else {
-    echo json_encode(["status" => "error", "message" => "Failed to create wallet"]);
+    
+    $symbol = $currency_data[$currency_type]["symbol"] ?? "";
+    $current_value = $currency_data[$currency_type]["value"] ?? 0.00;
+    
+    $stmt = $conn->prepare("INSERT INTO currency (currency_type, symbol, current_value, wallet_id) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssdi", $currency_type, $symbol, $current_value, $wallet_id);
+    return $stmt->execute();
 }
 
-$stmt->close();
+// Send JSON response
+function send_response($status, $message) {
+    echo json_encode(["status" => $status, "message" => $message]);
+    exit();
+}
+
+// Main execution
+set_cors_headers();
+handle_preflight();
+$conn = connect_db();
+if (!$conn) send_response("error", "Database connection error");
+
+$data = get_request_data();
+if (!validate_input($data)) send_response("error", "Missing required fields");
+
+if (!user_exists($conn, $data['user_id'])) send_response("error", "User not found");
+
+$wallet_id = create_wallet($conn, $data['user_id'], $data['currency_type'], $data['balance']);
+if (!$wallet_id) send_response("error", "Failed to create wallet");
+
+if (!create_currency($conn, $data['currency_type'], $wallet_id)) send_response("error", "Failed to insert currency data");
+
+send_response("success", "Wallet and currency created successfully");
+
 $conn->close();
 ?>
