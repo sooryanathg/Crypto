@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import anime from "animejs";
+import Confetti from 'react-confetti';
 
 const Currency = () => {
   const { wallet_id } = useParams();
@@ -9,6 +11,11 @@ const Currency = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [depositAmount, setDepositAmount] = useState("");
+  const depositButtonRef = useRef(null);
+  const backButtonRef = useRef(null);
+  const sendButtonRef = useRef(null);
+  const currencyCardRef = useRef(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (!wallet_id) {
@@ -18,6 +25,40 @@ const Currency = () => {
     }
     fetchCurrencyDetails();
   }, [wallet_id]);
+
+  useLayoutEffect(() => {
+    if (backButtonRef.current && sendButtonRef.current && depositButtonRef.current) {
+      animateButtons();
+    }
+    if (currencyCardRef.current) {
+      animateCardEntry();
+    }
+  }, [currencyDetails]);
+
+  const animateButtons = () => {
+    if (backButtonRef.current && sendButtonRef.current && depositButtonRef.current) {
+      anime({
+        targets: [backButtonRef.current, sendButtonRef.current, depositButtonRef.current],
+        scale: [0.8, 1],
+        opacity: [0, 1],
+        duration: 800,
+        delay: anime.stagger(100),
+        easing: "easeOutElastic(1, .8)",
+      });
+    }
+  };
+
+  const animateCardEntry = () => {
+    if (currencyCardRef.current) {
+      anime({
+        targets: currencyCardRef.current,
+        translateY: [-50, 0],
+        opacity: [0, 1],
+        duration: 1000,
+        easing: "easeOutQuad",
+      });
+    }
+  };
 
   const fetchCurrencyDetails = async () => {
     setLoading(true);
@@ -53,6 +94,9 @@ const Currency = () => {
         setMessage("✅ Deposit successful!");
         setDepositAmount("");
         fetchCurrencyDetails();
+        animateDepositSuccess();
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
         setTimeout(() => {
           setMessage("");
         }, 3000);
@@ -64,51 +108,78 @@ const Currency = () => {
     }
   };
 
+  const animateDepositSuccess = () => {
+    if (depositButtonRef.current) {
+      anime({
+        targets: depositButtonRef.current,
+        scale: [1, 1.2, 1],
+        rotate: "1turn",
+        duration: 800,
+        easing: "easeInOutQuad",
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-r from-yellow-100 to-white text-gray-800 p-6 relative">
+      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
       <button
+        ref={backButtonRef}
         onClick={() => navigate("/wallet")}
-        className="bg-gray-700 px-4 py-2 rounded-lg mb-4"
+        className="bg-gray-300 px-4 py-2 rounded-lg mb-4 hover:bg-gray-400 transition-colors duration-300 shadow-md"
       >
         ⬅ Back to Wallets
-        </button>
-      <h2 className="text-3xl font-bold text-center">Currency Details</h2>
+      </button>
+      <h2 className="text-4xl font-extrabold text-center mb-6 text-gray-900">
+        Currency Details
+      </h2>
 
       {loading ? (
-        <p className="text-center mt-4 text-gray-400">⏳ Loading...</p>
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-600"></div>
+        </div>
       ) : currencyDetails ? (
-        <div className="bg-gray-800 p-6 mt-6 rounded-xl shadow-lg w-96 mx-auto text-center">
-          <h3 className="text-xl font-semibold">{currencyDetails.currency_type}</h3>
-          <p className="mt-2 text-gray-300">Symbol: {currencyDetails.symbol}</p>
-          <p className="mt-2 text-gray-300">Current Value: ${currencyDetails.current_value}</p>
+        <div
+          ref={currencyCardRef}
+          className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-8 mt-8 rounded-3xl shadow-2xl w-96 mx-auto text-center border border-gray-300"
+        >
+          <h3 className="text-3xl font-semibold mb-4 text-gradient-to-r from-orange-400 to-yellow-500">
+            {currencyDetails.currency_type}
+          </h3>
+          <p className="mt-2 text-gray-700">
+            Symbol: <span className="text-blue-600">{currencyDetails.symbol}</span>
+          </p>
+          <p className="mt-2 text-gray-700">
+            Current Value: <span className="text-green-600">${currencyDetails.current_value}</span>
+          </p>
 
-          {/* Deposit Section */}
-          <div className="mt-4">
+          <div className="mt-6">
             <input
               type="number"
               placeholder="Enter amount"
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
-              className="p-2 rounded bg-gray-700 text-white w-full"
+              className="p-3 rounded-xl bg-gray-200 text-gray-800 w-full mb-3 focus:ring-2 focus:ring-blue-500 transition-shadow duration-300"
             />
             <button
+              ref={depositButtonRef}
               onClick={handleDeposit}
-              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg mt-2 w-full"
+              className="bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 px-6 py-3 rounded-full mt-2 w-full font-semibold shadow-md transition-transform transform hover:scale-105 active:scale-95 transition-all duration-200"
             >
               💰 Deposit
             </button>
           </div>
-          
-          {/* Send Crypto Button */}
+
           <button
-            className="w-full bg-blue-500 hover:bg-blue-600 mt-4 py-2 rounded-lg"
+            ref={sendButtonRef}
+            className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 mt-6 py-3 rounded-full font-semibold shadow-md transition-transform transform hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => navigate(`/send/${wallet_id}`)}
           >
-            Send Crypto
+            Send Crypto 🚀
           </button>
         </div>
       ) : (
-        <p className="text-center mt-4 text-gray-300">{message}</p>
+        <p className="text-center mt-8 text-gray-600">{message}</p>
       )}
     </div>
   );

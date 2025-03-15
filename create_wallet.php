@@ -28,7 +28,7 @@ function get_request_data() {
 
 // Validate input data
 function validate_input($data) {
-    return isset($data['user_id']) && isset($data['currency_type']) && isset($data['balance']);
+    return isset($data['user_id'], $data['currency_type'], $data['balance']);
 }
 
 // Check if user exists
@@ -53,7 +53,7 @@ function create_wallet($conn, $user_id, $currency_type, $balance) {
 // Insert currency details
 function create_currency($conn, $currency_type, $wallet_id) {
     $currency_data = [
-        "Bitcoin" => ["symbol" => "₿", "value" => 50000],
+        "Bitcoin"  => ["symbol" => "₿", "value" => 50000],
         "Ethereum" => ["symbol" => "Ξ", "value" => 3000],
         "Litecoin" => ["symbol" => "Ł", "value" => 150]
     ];
@@ -72,23 +72,29 @@ function send_response($status, $message) {
     exit();
 }
 
-// Main execution
-set_cors_headers();
-handle_preflight();
-$conn = connect_db();
-if (!$conn) send_response("error", "Database connection error");
+// Main Execution Function
+function process_request() {
+    set_cors_headers();
+    handle_preflight();
 
-$data = get_request_data();
-if (!validate_input($data)) send_response("error", "Missing required fields");
+    $conn = connect_db();
+    if (!$conn) send_response("error", "Database connection error");
 
-if (!user_exists($conn, $data['user_id'])) send_response("error", "User not found");
+    $data = get_request_data();
+    if (!validate_input($data)) send_response("error", "Missing required fields");
 
-$wallet_id = create_wallet($conn, $data['user_id'], $data['currency_type'], $data['balance']);
-if (!$wallet_id) send_response("error", "Failed to create wallet");
+    if (!user_exists($conn, $data['user_id'])) send_response("error", "User not found");
 
-if (!create_currency($conn, $data['currency_type'], $wallet_id)) send_response("error", "Failed to insert currency data");
+    $wallet_id = create_wallet($conn, $data['user_id'], $data['currency_type'], $data['balance']);
+    if (!$wallet_id) send_response("error", "Failed to create wallet");
 
-send_response("success", "Wallet and currency created successfully");
+    if (!create_currency($conn, $data['currency_type'], $wallet_id)) send_response("error", "Failed to insert currency data");
 
-$conn->close();
+    send_response("success", "Wallet and currency created successfully");
+
+    $conn->close();
+}
+
+// Execute the main function
+process_request();
 ?>

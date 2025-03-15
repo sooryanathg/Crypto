@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import anime from "animejs";
+import Confetti from "react-confetti";
 
 const SendCrypto = () => {
   const { wallet_id } = useParams();
@@ -8,6 +10,19 @@ const SendCrypto = () => {
   const [recipientUserId, setRecipientUserId] = useState("");
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const sendFormRef = useRef(null);
+  const sendButtonRef = useRef(null);
+
+  useEffect(() => {
+    anime({
+      targets: sendFormRef.current,
+      translateY: [-50, 0],
+      opacity: [0, 1],
+      duration: 800,
+      easing: "easeOutSine",
+    });
+  }, []);
 
   const handleSendCrypto = async () => {
     if (!recipientUserId || !amount) {
@@ -20,15 +35,22 @@ const SendCrypto = () => {
         wallet_id,
         recipient_user_id: recipientUserId,
         amount,
-        transaction_type: "transfer", // ✅ Ensure transaction type is set to "transfer"
+        transaction_type: "transfer",
       });
 
       if (response.data.status === "success") {
         setMessage("✅ Crypto sent successfully!");
         setRecipientUserId("");
         setAmount("");
-
-        // Clear message after 3 seconds
+        setShowConfetti(true);
+        anime({
+          targets: sendButtonRef.current,
+          scale: [1, 1.1, 1],
+          rotate: "360deg",
+          duration: 1000,
+          easing: "easeInOutElastic(1, .8)",
+        });
+        setTimeout(() => setShowConfetti(false), 3000);
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage(`❌ ${response.data.message}`);
@@ -40,40 +62,50 @@ const SendCrypto = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <button onClick={() => navigate(-1)} className="bg-gray-700 px-4 py-2 rounded-lg mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 relative">
+      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 px-5 py-3 rounded-xl mb-6 shadow-md transition-colors duration-300"
+      >
         ⬅ Back
       </button>
-      <h2 className="text-3xl font-bold text-center">Send Crypto</h2>
+      <h2 className="text-4xl font-extrabold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 animate-pulse">
+        Send Crypto
+      </h2>
 
-      <div className="bg-gray-800 p-6 mt-6 rounded-xl shadow-lg w-96 mx-auto">
-        <label className="block text-gray-300">Recipient User ID:</label>
+      <div
+        ref={sendFormRef}
+        className="bg-gradient-to-br from-gray-800/70 to-gray-700/70 backdrop-blur-md border border-gray-700 p-8 rounded-3xl shadow-2xl w-96 mx-auto transform transition-all duration-300 hover:scale-105"
+      >
+        <label className="block text-gray-300 font-semibold mb-2">Recipient User ID:</label>
         <input
           type="number"
           placeholder="Enter recipient user ID"
-          className="w-full mt-2 p-2 bg-gray-700 rounded-lg"
+          className="w-full p-4 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 hover:bg-gray-600/50 mb-4"
           value={recipientUserId}
           onChange={(e) => setRecipientUserId(e.target.value)}
         />
 
-        <label className="block text-gray-300 mt-4">Amount:</label>
+        <label className="block text-gray-300 font-semibold mb-2">Amount:</label>
         <input
           type="number"
           placeholder="Enter amount"
-          className="w-full mt-2 p-2 bg-gray-700 rounded-lg"
+          className="w-full p-4 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 hover:bg-gray-600/50 mb-6"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
 
         <button
-          className="w-full bg-blue-500 hover:bg-blue-600 mt-4 py-2 rounded-lg"
+          ref={sendButtonRef}
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 transition-all duration-300 text-white font-semibold text-lg flex justify-center items-center shadow-md hover:shadow-lg"
           onClick={handleSendCrypto}
         >
           Send
         </button>
       </div>
 
-      {message && <p className="mt-4 text-center text-gray-300">{message}</p>}
+      {message && <p className="mt-6 text-center text-gray-300">{message}</p>}
     </div>
   );
 };
