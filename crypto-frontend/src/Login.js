@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import anime from "animejs";
+import Confetti from "react-confetti"; // Install: npm install react-confetti
 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const loginFormRef = useRef(null);
+
+  useEffect(() => {
+    anime({
+      targets: loginFormRef.current,
+      translateY: [-50, 0],
+      opacity: [0, 1],
+      duration: 1000,
+      easing: "easeOutQuad",
+    });
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,12 +33,14 @@ const Login = ({ setIsAuthenticated }) => {
 
     try {
       const response = await axios.post("http://localhost/Crypto/login.php", formData);
-      
+
       if (response.data.status === "success") {
         localStorage.setItem("user_id", response.data.user_id);
         localStorage.setItem("username", response.data.username);
         setIsAuthenticated(true);
         setMessage(`✅ Welcome, ${response.data.username}! Redirecting...`);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
         setTimeout(() => navigate("/dashboard"), 1500);
       } else {
         setMessage(`❌ ${response.data.message}`);
@@ -37,10 +53,14 @@ const Login = ({ setIsAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700 p-8 rounded-2xl shadow-2xl w-96">
-        <h2 className="text-3xl font-bold text-white text-center">Login</h2>
-        
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 relative">
+      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
+      <div
+        ref={loginFormRef}
+        className="bg-gray-800/50 backdrop-blur-md border border-gray-700 p-8 rounded-2xl shadow-2xl w-96"
+      >
+        <h2 className="text-3xl font-bold text-white text-center mb-6 animate-pulse">Login</h2>
+
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
@@ -60,7 +80,7 @@ const Login = ({ setIsAuthenticated }) => {
           />
           <button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 transition-colors duration-200 text-white font-semibold py-3 rounded-lg flex justify-center items-center"
+            className="w-full bg-blue-500 hover:bg-blue-600 transition-colors duration-200 text-white font-semibold py-3 rounded-lg flex justify-center items-center animate-bounce"
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
@@ -71,7 +91,7 @@ const Login = ({ setIsAuthenticated }) => {
 
         <p className="text-gray-400 mt-4 text-center">
           Don't have an account?{" "}
-          <a href="/signup" className="text-blue-400 hover:underline">
+          <a href="/signup" className="text-blue-400 hover:underline animate-pulse">
             Sign up
           </a>
         </p>
