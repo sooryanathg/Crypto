@@ -87,8 +87,8 @@ const TransactionCard = ({ transaction }) => {
 
       <div className="text-gray-800 space-y-2">
         <p className="text-xl font-semibold">{transaction.currency_type} Transaction</p>
-        <p className={`font-medium flex items-center gap-2 ${transaction.status === "Completed" ? "text-green-600" : "text-red-600"}`}>
-          {transaction.status === "Completed" ? <FaCheckCircle /> : <FaTimesCircle />}
+        <p className={`font-medium flex items-center gap-2 ${transaction.status === "Completed" ||"completed" ? "text-green-600" : "text-red-600"}`}>
+          {transaction.status === "Completed"||"completed" ? <FaCheckCircle /> : <FaTimesCircle />}
           <span>Status: {transaction.status}</span>
         </p>
         <p className="text-2xl font-bold text-gray-900">
@@ -112,18 +112,27 @@ const Transactions = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-br from-gray-900 to-black p-8 flex flex-col items-center"
+      className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-200 to-purple-300 p-8 flex flex-col items-center overflow-hidden relative"
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-300 to-purple-400 opacity-25 blur-3xl animate-pulse"></div>
+      
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => navigate("/dashboard")}
-        className="bg-gradient-to-r from-blue-600 to-purple-700 hover:opacity-90 transition-transform px-6 py-3 rounded-full shadow-lg mb-6 text-lg font-semibold text-white flex items-center space-x-2"
-      >
-        <FaArrowLeft /> <span>Back to Dashboard</span>
-      </motion.button>
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  onClick={() => {
+    console.log("Navigating to /dashboard...");
+    navigate("/dashboard", { replace: true });
+  }}
+  className="z-50 bg-purple-500 hover:bg-purple-600 transition-transform px-6 py-3 rounded-full shadow-lg mb-6 text-lg font-bold text-white flex items-center space-x-2 uppercase tracking-wide"
+  style={{ position: "relative" }} // Ensures it's above other elements
+>
+  <FaArrowLeft /> <span>Back to Dashboard</span>
+</motion.button>
 
-      <h2 className="text-5xl font-extrabold text-center text-white mb-8">
+
+
+
+      <h2 className="text-5xl font-extrabold text-center text-gray-800 drop-shadow-lg mb-8 animate-pulse">
         Transaction History
       </h2>
 
@@ -133,7 +142,7 @@ const Transactions = () => {
         ) : (
           <>
             {error && (
-              <p className="text-center mt-4 text-red-400">{error}</p>
+              <p className="text-center mt-4 text-purple-600">{error}</p>
             )}
 
             {transactions.length > 0 && (
@@ -154,5 +163,6 @@ const Transactions = () => {
     </motion.div>
   );
 };
+
 
 export default Transactions;
