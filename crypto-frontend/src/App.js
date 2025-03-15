@@ -68,10 +68,11 @@ const App = () => {
   <Route path="/login" element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
   <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
   <Route path="/wallet" element={isAuthenticated ? <Wallet /> : <Navigate to="/login" />} />
-  <Route path="/currency/:wallet_id" element={<Currency />} />
-  <Route path="/send/:wallet_id" element={<SendCrypto />} />
-  <Route path="/transactions" element={<Transactions />} />
+  <Route path="/currency/:wallet_id" element={isAuthenticated ? <Currency /> : <Navigate to="/login" />} />
+  <Route path="/send/:wallet_id" element={isAuthenticated ? <SendCrypto /> : <Navigate to="/login" />} />
+  <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/login" />} />
 </Routes>
+
 
         </div>
       </div>
