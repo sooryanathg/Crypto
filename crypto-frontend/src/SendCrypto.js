@@ -62,50 +62,50 @@ const SendCrypto = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-200 to-purple-300 text-gray-800 p-6 relative">
       {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
       <button
         onClick={() => navigate(-1)}
-        className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 px-5 py-3 rounded-xl mb-6 shadow-md transition-colors duration-300"
+        className="bg-gradient-to-r from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 px-5 py-3 rounded-xl mb-6 shadow-lg transition-transform duration-300 text-white"
       >
         ⬅ Back
       </button>
-      <h2 className="text-4xl font-extrabold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 animate-pulse">
+      <h2 className="text-4xl font-extrabold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse">
         Send Crypto
       </h2>
 
       <div
         ref={sendFormRef}
-        className="bg-gradient-to-br from-gray-800/70 to-gray-700/70 backdrop-blur-md border border-gray-700 p-8 rounded-3xl shadow-2xl w-96 mx-auto transform transition-all duration-300 hover:scale-105"
+        className="bg-gradient-to-br from-purple-300 to-purple-500 backdrop-blur-md border border-gray-300 p-8 rounded-3xl shadow-2xl w-96 mx-auto transform transition-all duration-300 hover:scale-105"
       >
-        <label className="block text-gray-300 font-semibold mb-2">Recipient User ID:</label>
+        <label className="block text-gray-800 font-semibold mb-2">Recipient User ID:</label>
         <input
           type="number"
           placeholder="Enter recipient user ID"
-          className="w-full p-4 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 hover:bg-gray-600/50 mb-4"
+          className="w-full p-4 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-gray-100/90 mb-4"
           value={recipientUserId}
           onChange={(e) => setRecipientUserId(e.target.value)}
         />
 
-        <label className="block text-gray-300 font-semibold mb-2">Amount:</label>
+        <label className="block text-gray-800 font-semibold mb-2">Amount:</label>
         <input
           type="number"
           placeholder="Enter amount"
-          className="w-full p-4 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 hover:bg-gray-600/50 mb-6"
+          className="w-full p-4 rounded-xl bg-white/90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-gray-100/90 mb-6"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
 
         <button
           ref={sendButtonRef}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 transition-all duration-300 text-white font-semibold text-lg flex justify-center items-center shadow-md hover:shadow-lg"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-blue-500 hover:to-purple-600 transition-transform duration-300 text-white font-semibold text-lg flex justify-center items-center shadow-lg hover:shadow-xl"
           onClick={handleSendCrypto}
         >
           Send
         </button>
       </div>
 
-      {message && <p className="mt-6 text-center text-gray-300">{message}</p>}
+      {message && <p className="mt-6 text-center text-purple-600 font-medium">{message}</p>}
     </div>
   );
 };
