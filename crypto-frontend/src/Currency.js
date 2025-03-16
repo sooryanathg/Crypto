@@ -2,12 +2,13 @@ import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import anime from "animejs";
-import Confetti from 'react-confetti';
+import Confetti from "react-confetti";
 
 const Currency = () => {
   const { wallet_id } = useParams();
   const navigate = useNavigate();
   const [currencyDetails, setCurrencyDetails] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [depositAmount, setDepositAmount] = useState("");
@@ -24,6 +25,7 @@ const Currency = () => {
       return;
     }
     fetchCurrencyDetails();
+    fetchWalletBalance();
   }, [wallet_id]);
 
   useLayoutEffect(() => {
@@ -33,31 +35,27 @@ const Currency = () => {
     if (currencyCardRef.current) {
       animateCardEntry();
     }
-  }, [currencyDetails]);
+  }, [currencyDetails, walletBalance]);
 
   const animateButtons = () => {
-    if (backButtonRef.current && sendButtonRef.current && depositButtonRef.current) {
-      anime({
-        targets: [backButtonRef.current, sendButtonRef.current, depositButtonRef.current],
-        scale: [0.8, 1],
-        opacity: [0, 1],
-        duration: 800,
-        delay: anime.stagger(100),
-        easing: "easeOutElastic(1, .8)",
-      });
-    }
+    anime({
+      targets: [backButtonRef.current, sendButtonRef.current, depositButtonRef.current],
+      scale: [0.8, 1],
+      opacity: [0, 1],
+      duration: 800,
+      delay: anime.stagger(100),
+      easing: "easeOutElastic(1, .8)",
+    });
   };
 
   const animateCardEntry = () => {
-    if (currencyCardRef.current) {
-      anime({
-        targets: currencyCardRef.current,
-        translateY: [-50, 0],
-        opacity: [0, 1],
-        duration: 1000,
-        easing: "easeOutQuad",
-      });
-    }
+    anime({
+      targets: currencyCardRef.current,
+      translateY: [-50, 0],
+      opacity: [0, 1],
+      duration: 1000,
+      easing: "easeOutQuad",
+    });
   };
 
   const fetchCurrencyDetails = async () => {
@@ -78,6 +76,32 @@ const Currency = () => {
     }
   };
 
+  const fetchWalletBalance = async () => {
+    try {
+      // Fetch user_id from localStorage (assuming user is logged in)
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        setMessage("❌ User not logged in.");
+        return;
+      }
+
+      // Fetch wallet details
+      const response = await axios.get(`http://localhost/Crypto/get_wallets.php?user_id=${userId}`);
+      console.log("Wallets Response:", response.data);
+
+      if (response.data.status === "success") {
+        // Find the correct wallet balance using wallet_id
+        const wallet = response.data.wallets.find((w) => w.wallet_id == wallet_id);
+        setWalletBalance(wallet ? wallet.balance : "N/A");
+      } else {
+        setWalletBalance(null);
+        setMessage("❌ Error fetching wallet balance.");
+      }
+    } catch (error) {
+      setMessage("❌ Error fetching wallet balance.");
+    }
+  };
+
   const handleDeposit = async () => {
     if (!depositAmount || depositAmount <= 0) {
       setMessage("❌ Enter a valid deposit amount.");
@@ -94,6 +118,7 @@ const Currency = () => {
         setMessage("✅ Deposit successful!");
         setDepositAmount("");
         fetchCurrencyDetails();
+        fetchWalletBalance(); // Refresh wallet balance
         animateDepositSuccess();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
@@ -109,15 +134,13 @@ const Currency = () => {
   };
 
   const animateDepositSuccess = () => {
-    if (depositButtonRef.current) {
-      anime({
-        targets: depositButtonRef.current,
-        scale: [1, 1.2, 1],
-        rotate: "1turn",
-        duration: 800,
-        easing: "easeInOutQuad",
-      });
-    }
+    anime({
+      targets: depositButtonRef.current,
+      scale: [1, 1.2, 1],
+      rotate: "1turn",
+      duration: 800,
+      easing: "easeInOutQuad",
+    });
   };
 
   return (
@@ -130,9 +153,7 @@ const Currency = () => {
       >
         ⬅ Back to Wallets
       </button>
-      <h2 className="text-4xl font-extrabold text-center mb-6 text-gray-900">
-        Currency Details
-      </h2>
+      <h2 className="text-4xl font-extrabold text-center mb-6 text-gray-900">Currency Details</h2>
 
       {loading ? (
         <div className="flex justify-center items-center h-40">
@@ -152,6 +173,12 @@ const Currency = () => {
           <p className="mt-2 text-gray-700">
             Current Value: <span className="text-green-600">${currencyDetails.current_value}</span>
           </p>
+          <p className="mt-2 text-gray-700 text-lg font-bold">
+            Your Balance:{" "}
+            <span className="text-purple-600">
+              {walletBalance !== null ? `${walletBalance} ${currencyDetails.symbol}` : "Loading..."}
+            </span>
+          </p>
 
           <div className="mt-6">
             <input
@@ -169,7 +196,6 @@ const Currency = () => {
               💰 Deposit
             </button>
           </div>
-
           <button
             ref={sendButtonRef}
             className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 mt-6 py-3 rounded-full font-semibold shadow-md transition-transform transform hover:scale-105 active:scale-95 transition-all duration-200"

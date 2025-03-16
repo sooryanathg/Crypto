@@ -1,68 +1,92 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaWallet, FaExchangeAlt, FaCog } from "react-icons/fa";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const userId = localStorage.getItem("user_id");
+  const [userId, setUserId] = useState(localStorage.getItem("user_id"));
   const username = localStorage.getItem("username");
-  const [isProfileHovered, setIsProfileHovered] = useState(false);
 
+  // Flag to determine if logout has been initiated.
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [isProfileHovered, setIsProfileHovered] = useState(false);
+  const [balance, setBalance] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const fetchCalled = useRef(false);
+
+  // Redirect if no userId is found.
   useEffect(() => {
     if (!userId) {
       navigate("/login");
+      return;
     }
-  }, [navigate, userId]);
+
+    if (fetchCalled.current) return;
+    fetchCalled.current = true;
+
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch("http://localhost/Crypto/get_user.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.status === "success") {
+          setBalance(data.user.balance);
+        } else {
+          console.error("Error fetching user:", data.message);
+        }
+      } catch (error) {
+        console.error("Network or API error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+
+    return () => {
+      fetchCalled.current = false;
+    };
+  }, [userId, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("username");
-    window.location.href = "/login";
+    // Set a flag to suppress exit animation during logout.
+    setLoggingOut(true);
+    // Clear storage immediately.
+    localStorage.clear();
+    // You can also clear any local state if needed.
+    // A very short delay allows the flag to register before navigating.
+    setTimeout(() => {
+      setUserId(null);
+      navigate("/login");
+    }, 10);
   };
 
-  const navVariants = {
-    hidden: { opacity: 0, y: -30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
-  };
-
-  const profileVariants = {
-    hidden: { opacity: 0, scale: 0.9, y: 20 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.9, ease: [0.6, 0.05, 0.01, 0.9] } }, // Modified ease
-    hover: { scale: 1.05, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)", transition: { duration: 0.3 } },
-  };
-
-  const buttonVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.3, ease: "easeInOut" } }, // Modified ease
-    hover: { scale: 1.03, boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)", transition: { duration: 0.3 } },
-    tap: { scale: 0.98 },
-  };
+  // Optionally, if no userId is present, don't render any Dashboard UI.
+  if (!userId) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      // If logging out, immediately remove (duration 0), otherwise use fade-out
+      exit={
+        loggingOut
+          ? { opacity: 0, transition: { duration: 0 } }
+          : { opacity: 0, transition: { duration: 0.15, ease: "easeInOut" } }
+      }
       className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 text-gray-800 flex flex-col items-center p-10 relative overflow-hidden"
     >
-      <motion.div
-        initial={{ x: -200, y: 100, rotate: 45, opacity: 0 }}
-        animate={{ x: "100vw", y: "50vh", rotate: 360, opacity: 0.2, transition: { duration: 10, repeat: Infinity, ease: "linear" } }}
-        className="absolute w-40 h-40 bg-gradient-to-r from-blue-300 to-purple-300 rounded-full blur-2xl"
-      />
-      <motion.div
-        initial={{ x: "100vw", y: "80vh", rotate: -45, opacity: 0 }}
-        animate={{ x: -100, y: "20vh", rotate: -360, opacity: 0.2, transition: { duration: 12, repeat: Infinity, ease: "linear" } }}
-        className="absolute w-32 h-32 bg-gradient-to-r from-pink-300 to-indigo-300 rounded-full blur-2xl"
-      />
-
-      <motion.nav
-        variants={navVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg w-full p-6 flex justify-between items-center rounded-2xl shadow-2xl border border-gray-200"
-      >
+      {/* Navbar */}
+      <motion.nav className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg w-full p-6 flex justify-between items-center rounded-2xl shadow-2xl border border-gray-200">
         <h1 className="text-3xl font-semibold text-indigo-700 tracking-wide">
           <span className="text-indigo-500 animate-pulse">🚀</span> CryptoX
         </h1>
@@ -76,58 +100,71 @@ const Dashboard = () => {
         </motion.button>
       </motion.nav>
 
-      <motion.div
-        variants={profileVariants}
-        initial="hidden"
-        animate="visible"
-        whileHover="hover"
-        onMouseEnter={() => setIsProfileHovered(true)}
-        onMouseLeave={() => setIsProfileHovered(false)}
-        className="mt-16 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-gray-200 max-w-md w-full flex items-center space-x-8 relative"
-      >
-        <div className="relative">
+      {/* Profile Card */}
+      <motion.div className="mt-16 bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-gray-200 max-w-md w-full flex items-center space-x-8 relative">
+        <div
+          className="relative"
+          onMouseEnter={() => setIsProfileHovered(true)}
+          onMouseLeave={() => setIsProfileHovered(false)}
+        >
           <img
-            src="https://via.placeholder.com/120"
+            src="https://via.placeholder.com/120" // Replace with an actual reliable image URL
             alt="Profile"
             className="w-24 h-24 rounded-full border-4 border-indigo-400 object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "placeholder_image.png"; // Provide a local fallback image
+            }}
           />
+
+          {/* Spinning Gear Animation on Hover */}
           <AnimatePresence>
             {isProfileHovered && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute inset-0 rounded-full bg-indigo-500 bg-opacity-20 backdrop-filter backdrop-blur-lg flex items-center justify-center"
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0 flex items-center justify-center bg-indigo-200 bg-opacity-40 rounded-full"
               >
-                <FaCog className="text-indigo-700 text-3xl animate-spin" />
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <FaCog className="text-indigo-700 text-3xl" />
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
         <div>
-          <h3 className="text-3xl font-semibold text-indigo-700 mb-2">{username || "User"}</h3>
+          <h3 className="text-3xl font-semibold text-indigo-700 mb-2">
+            {username || "User"}
+          </h3>
           <p className="text-gray-600 text-sm">User ID: {userId || "N/A"}</p>
+          <p className="text-gray-700 text-lg font-medium mt-2">
+            Balance:{" "}
+            <span className="text-green-600 font-bold">
+              {loading ? "Loading..." : `$${parseFloat(balance).toFixed(2)}`}
+            </span>
+          </p>
         </div>
       </motion.div>
 
+      {/* Action Buttons */}
       <div className="mt-20 flex flex-col space-y-8 w-full max-w-md">
         <motion.button
-          variants={buttonVariants}
-          initial="hidden"
-          animate="visible"
-          whileHover="hover"
-          whileTap="tap"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => navigate("/wallet")}
           className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold py-5 px-10 rounded-2xl shadow-xl flex items-center justify-center space-x-3"
         >
           <FaWallet /> <span>View Wallets</span>
         </motion.button>
         <motion.button
-          variants={buttonVariants}
-          initial="hidden"
-          animate="visible"
-          whileHover="hover"
-          whileTap="tap"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => navigate("/transactions")}
           className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-5 px-10 rounded-2xl shadow-xl flex items-center justify-center space-x-3"
         >
