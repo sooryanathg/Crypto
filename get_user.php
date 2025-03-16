@@ -15,7 +15,7 @@ if (!isset($data['user_id'])) {
 
 $user_id = $data['user_id'];
 
-$query = $conn->prepare("SELECT user_id, username FROM users WHERE user_id = ?");
+$query = $conn->prepare("SELECT user_id, username, balance FROM users WHERE user_id = ?");
 $query->bind_param("i", $user_id);
 $query->execute();
 $result = $query->get_result();
