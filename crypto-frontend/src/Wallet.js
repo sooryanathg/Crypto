@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
+const API_BASE_URL = "http://crypto-system.great-site.net/";
+
 const Wallet = () => {
   const navigate = useNavigate();
   const [wallets, setWallets] = useState([]);
@@ -29,7 +32,7 @@ const Wallet = () => {
   const fetchWallets = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost/Crypto/get_wallets.php", { user_id: userId });
+      const response = await axios.post(`${API_BASE_URL}get_wallets.php`, { user_id: userId });
       if (response.data.status === "success" && Array.isArray(response.data.wallets)) {
         setWallets(response.data.wallets);
       } else {
