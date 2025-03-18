@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaWallet, FaExchangeAlt, FaCog } from "react-icons/fa";
 
+
+const API_BASE_URL = "http://crypto-system.great-site.net/";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState(localStorage.getItem("user_id"));
@@ -27,7 +30,7 @@ const Dashboard = () => {
 
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch("http://localhost/Crypto/get_user.php", {
+          const response = await fetch(`${API_BASE_URL}get_user.php`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id: userId }),
