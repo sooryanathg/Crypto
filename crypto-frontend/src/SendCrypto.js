@@ -4,9 +4,6 @@ import axios from "axios";
 import anime from "animejs";
 import Confetti from "react-confetti";
 
-
-const API_BASE_URL = "https://crypto-system.great-site.net/";
-
 const SendCrypto = () => {
   const { wallet_id } = useParams();
   const navigate = useNavigate();
@@ -34,7 +31,7 @@ const SendCrypto = () => {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}send_crypto.php`, {
+      const response = await axios.post("http://localhost/Crypto/send_crypto.php", {
         wallet_id,
         recipient_user_id: recipientUserId,
         amount,
