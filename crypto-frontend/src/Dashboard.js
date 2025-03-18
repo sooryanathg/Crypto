@@ -16,46 +16,45 @@ const Dashboard = () => {
   const fetchCalled = useRef(false);
 
   // Redirect if no userId is found.
-  useEffect(() => {
-    if (!userId) {
-      navigate("/login");
-      return;
-    }
+useEffect(() => {
+  console.log("Fetching user details...");
 
-    if (fetchCalled.current) return;
-    fetchCalled.current = true;
+  if (!userId) {
+    navigate("/login");
+    return;
+  }
 
-    const fetchUserDetails = async () => {
-      try {
-        const response = await fetch("http://localhost/Crypto/get_user.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId }),
-        });
+  if (fetchCalled.current) return;
+  fetchCalled.current = true;
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  const fetchUserDetails = async () => {
+    try {
+      const response = await fetch("http://localhost/Crypto/get_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      });
 
-        const data = await response.json();
-        if (data.status === "success") {
-          setBalance(data.user.balance);
-        } else {
-          console.error("Error fetching user:", data.message);
-        }
-      } catch (error) {
-        console.error("Network or API error:", error);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    fetchUserDetails();
+      const data = await response.json();
+      if (data.status === "success") {
+        setBalance(data.user.balance);
+      } else {
+        console.error("Error fetching user:", data.message);
+      }
+    } catch (error) {
+      console.error("Network or API error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => {
-      fetchCalled.current = false;
-    };
-  }, [userId, navigate]);
+  fetchUserDetails();
+}, [userId, navigate]);
+
 
   const handleLogout = () => {
     // Set a flag to suppress exit animation during logout.
