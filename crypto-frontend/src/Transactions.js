@@ -5,9 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaSyncAlt } from "react-icons/fa";
 import { format } from "date-fns";
 
-
-const API_BASE_URL = "https://crypto-system.great-site.net/";
-
 // Custom hook for data fetching
 const useTransactions = (userId) => {
   const [state, setState] = useState({
@@ -20,7 +17,7 @@ const useTransactions = (userId) => {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          `${API_BASE_URL}get_transactions.php`,
+          "http://localhost/Crypto/get_transactions.php",
           { user_id: userId }
         );
 
