@@ -4,8 +4,6 @@ import axios from "axios";
 import anime from "animejs";
 import Confetti from "react-confetti";
 
-const API_BASE_URL = "https://crypto-system.great-site.net/";
-
 const Currency = () => {
   const { wallet_id } = useParams();
   const navigate = useNavigate();
@@ -63,7 +61,7 @@ const Currency = () => {
   const fetchCurrencyDetails = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}get_currency.php`, { wallet_id });
+      const response = await axios.post("http://localhost/Crypto/get_currency.php", { wallet_id });
 
       if (response.data.status === "success") {
         setCurrencyDetails(response.data.currency);
