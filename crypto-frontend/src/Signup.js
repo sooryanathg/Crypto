@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 
+
+const API_BASE_URL = "http://crypto-system.great-site.net/";
+
 const Signup = () => {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [message, setMessage] = useState("");
@@ -25,7 +28,7 @@ const Signup = () => {
     setMessage("");
 
     try {
-      const response = await axios.post("http://sql206.infinityfree.com/register.php", formData);
+      const response = await axios.post(`${API_BASE_URL}register.php`, formData);
       
       if (response.data.status === "success") {
         setMessage("✅ Signup successful! Redirecting to login...");
