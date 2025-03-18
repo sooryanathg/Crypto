@@ -4,7 +4,7 @@ import axios from "axios";
 import anime from "animejs";
 import Confetti from "react-confetti";
 
-const API_BASE_URL = "http://crypto-system.great-site.net/";
+const API_BASE_URL = "https://crypto-system.great-site.net/";
 
 const Currency = () => {
   const { wallet_id } = useParams();
