@@ -29,7 +29,10 @@ const Login = ({ setIsAuthenticated }) => {
     setMessage("");
 
     try {
-      const response = await axios.post(`${API_BASE_URL}login.php`, formData);
+      const response = await axios.post(API_BASE_URL, JSON.stringify(formData), {
+      headers: { "Content-Type": "application/json" },
+    });
+
       
       if (response.data.status === "success") {
         localStorage.setItem("user_id", response.data.user_id);
