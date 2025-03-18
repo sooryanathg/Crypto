@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 
-const API_BASE_URL = "http://crypto-system.great-site.net/";
+const API_BASE_URL = "https://crypto-system.great-site.net/";
 
 const Wallet = () => {
   const navigate = useNavigate();
