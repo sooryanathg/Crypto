@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaWallet, FaExchangeAlt, FaCog } from "react-icons/fa";
 
 
-const API_BASE_URL = "http://crypto-system.great-site.net/";
+const API_BASE_URL = "https://crypto-system.great-site.net/";
 
 const Dashboard = () => {
   const navigate = useNavigate();
