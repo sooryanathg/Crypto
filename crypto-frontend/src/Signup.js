@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 
 
-const API_BASE_URL = "http://crypto-system.great-site.net/";
+const API_BASE_URL = "https://crypto-system.great-site.net/";
 
 const Signup = () => {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
