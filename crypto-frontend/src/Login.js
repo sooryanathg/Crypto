@@ -27,7 +27,7 @@ const Login = ({ setIsAuthenticated }) => {
     setMessage("");
 
     try {
-      const response = await axios.post("http://localhost/Crypto/login.php", formData);
+      const response = await axios.post("http://sql206.infinityfree.com/login.php", formData);
       
       if (response.data.status === "success") {
         localStorage.setItem("user_id", response.data.user_id);
