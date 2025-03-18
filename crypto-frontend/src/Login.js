@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import Confetti from "react-confetti";
 
-const API_BASE_URL = "http://crypto-system.great-site.net/";
+const API_BASE_URL = "https://crypto-system.great-site.net/";
 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
