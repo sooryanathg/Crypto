@@ -25,7 +25,7 @@ const Signup = () => {
     setMessage("");
 
     try {
-      const response = await axios.post("http://localhost/Crypto/register.php", formData);
+      const response = await axios.post("http://sql206.infinityfree.com/register.php", formData);
       
       if (response.data.status === "success") {
         setMessage("✅ Signup successful! Redirecting to login...");
