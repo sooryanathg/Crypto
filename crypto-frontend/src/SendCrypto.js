@@ -25,13 +25,15 @@ const SendCrypto = () => {
   }, []);
 
   const handleSendCrypto = async () => {
+    setMessage(""); // Clear previous messages
+
     if (!recipientUserId || !amount) {
       setMessage("❌ Please enter recipient user ID and amount.");
       return;
     }
 
     try {
-      const response = await axios.post("http://localhost/Crypto/send_crypto.php", {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/send_crypto.php`, {
         wallet_id,
         recipient_user_id: recipientUserId,
         amount,
@@ -53,11 +55,19 @@ const SendCrypto = () => {
         setTimeout(() => setShowConfetti(false), 3000);
         setTimeout(() => setMessage(""), 3000);
       } else {
-        setMessage(`❌ ${response.data.message}`);
+        // Special handling for missing recipient wallet error
+        if (response.data.message.includes("Recipient does not have a wallet")) {
+          setMessage(
+            `❌ ${response.data.message}. 
+            <br/>💡 <strong>Ask the recipient to create a wallet for this currency before sending.</strong>`
+          );
+        } else {
+          setMessage(`❌ ${response.data.message}`);
+        }
       }
     } catch (error) {
       console.error("Error sending crypto:", error);
-      setMessage("❌ Error sending crypto.");
+      setMessage("❌ Error sending crypto. Please try again.");
     }
   };
 
@@ -105,7 +115,12 @@ const SendCrypto = () => {
         </button>
       </div>
 
-      {message && <p className="mt-6 text-center text-purple-600 font-medium">{message}</p>}
+      {message && (
+        <p
+          className="mt-6 text-center text-purple-600 font-medium"
+          dangerouslySetInnerHTML={{ __html: message }} // Allow HTML formatting
+        ></p>
+      )}
     </div>
   );
 };
