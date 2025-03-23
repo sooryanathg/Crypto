@@ -21,8 +21,8 @@ $amount = floatval($data['amount']);
 $conn->begin_transaction();
 
 try {
-    // Get sender wallet details
-    $senderQuery = $conn->prepare("SELECT user_id, balance FROM wallet WHERE wallet_id = ?");
+    // Get sender wallet details (user_id, balance, currency_type)
+    $senderQuery = $conn->prepare("SELECT user_id, balance, currency_type FROM wallet WHERE wallet_id = ?");
     $senderQuery->bind_param("i", $wallet_id);
     $senderQuery->execute();
     $senderResult = $senderQuery->get_result();
@@ -34,19 +34,20 @@ try {
     $sender = $senderResult->fetch_assoc();
     $sender_user_id = $sender['user_id'];
     $sender_balance = floatval($sender['balance']);
+    $currency_type = $sender['currency_type']; // Get the currency type of the sender's wallet
 
     if ($amount <= 0 || $amount > $sender_balance) {
         throw new Exception("Invalid amount or insufficient balance");
     }
 
-    // Get recipient wallet
-    $recipientQuery = $conn->prepare("SELECT wallet_id FROM wallet WHERE user_id = ?");
-    $recipientQuery->bind_param("i", $recipient_user_id);
+    // Get recipient's wallet with the same currency type
+    $recipientQuery = $conn->prepare("SELECT wallet_id FROM wallet WHERE user_id = ? AND currency_type = ?");
+    $recipientQuery->bind_param("is", $recipient_user_id, $currency_type);
     $recipientQuery->execute();
     $recipientResult = $recipientQuery->get_result();
 
     if ($recipientResult->num_rows === 0) {
-        throw new Exception("Recipient wallet not found");
+        throw new Exception("Recipient does not have a wallet for " . $currency_type . ". Please ask them to create one.");
     }
 
     $recipient = $recipientResult->fetch_assoc();
@@ -62,16 +63,15 @@ try {
     $updateRecipient->bind_param("di", $amount, $recipient_wallet_id);
     $updateRecipient->execute();
 
-// Log transaction for sender
-$logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Sent', 'Completed', ?, NOW(), ?)");
-$logSenderTransaction->bind_param("di", $amount, $wallet_id);
-$logSenderTransaction->execute();
+    // Log transaction for sender
+    $logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Sent', 'Completed', ?, NOW(), ?)");
+    $logSenderTransaction->bind_param("di", $amount, $wallet_id);
+    $logSenderTransaction->execute();
 
-// Log transaction for recipient
-$logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Recieve', 'Completed', ?, NOW(), ?)");
-$logRecipientTransaction->bind_param("di", $amount, $recipient_wallet_id);
-$logRecipientTransaction->execute();
-
+    // Log transaction for recipient
+    $logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Received', 'Completed', ?, NOW(), ?)");
+    $logRecipientTransaction->bind_param("di", $amount, $recipient_wallet_id);
+    $logRecipientTransaction->execute();
 
     // Commit transaction
     $conn->commit();
