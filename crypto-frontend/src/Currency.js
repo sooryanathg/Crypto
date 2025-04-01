@@ -4,6 +4,8 @@ import axios from "axios";
 import anime from "animejs";
 import Confetti from "react-confetti";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://crypto-system.great-site.net";
+
 const Currency = () => {
   const { wallet_id } = useParams();
   const navigate = useNavigate();
@@ -61,7 +63,7 @@ const Currency = () => {
   const fetchCurrencyDetails = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost/Crypto/get_currency.php", { wallet_id });
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/get_currency.php`, { wallet_id });
 
       if (response.data.status === "success") {
         setCurrencyDetails(response.data.currency);
@@ -78,19 +80,16 @@ const Currency = () => {
 
   const fetchWalletBalance = async () => {
     try {
-      // Fetch user_id from localStorage (assuming user is logged in)
       const userId = localStorage.getItem("user_id");
       if (!userId) {
         setMessage("❌ User not logged in.");
         return;
       }
 
-      // Fetch wallet details
-      const response = await axios.get(`http://localhost/Crypto/get_wallets.php?user_id=${userId}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/get_wallets.php?user_id=${userId}`);
       console.log("Wallets Response:", response.data);
 
       if (response.data.status === "success") {
-        // Find the correct wallet balance using wallet_id
         const wallet = response.data.wallets.find((w) => w.wallet_id == wallet_id);
         setWalletBalance(wallet ? wallet.balance : "N/A");
       } else {
@@ -109,7 +108,7 @@ const Currency = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost/Crypto/deposit.php", {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/deposit.php`, {
         wallet_id,
         amount: depositAmount,
       });
@@ -118,7 +117,7 @@ const Currency = () => {
         setMessage("✅ Deposit successful!");
         setDepositAmount("");
         fetchCurrencyDetails();
-        fetchWalletBalance(); // Refresh wallet balance
+        fetchWalletBalance();
         animateDepositSuccess();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
@@ -191,7 +190,7 @@ const Currency = () => {
             <button
               ref={depositButtonRef}
               onClick={handleDeposit}
-              className="bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 px-6 py-3 rounded-full mt-2 w-full font-semibold shadow-md transition-transform transform hover:scale-105 active:scale-95 transition-all duration-200"
+              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-full mt-2 w-full font-semibold shadow-md"
             >
               💰 Deposit
             </button>

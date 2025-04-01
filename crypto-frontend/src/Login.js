@@ -37,7 +37,7 @@ const Login = ({ setIsAuthenticated }) => {
     setMessage("");
 
     try {
-      const response = await axios.post("http://localhost/Crypto/login.php", formData);
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/login.php`, formData);
 
       if (response.data.status === "success") {
         localStorage.setItem("user_id", response.data.user_id);

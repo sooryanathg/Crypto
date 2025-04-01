@@ -17,7 +17,7 @@ const useTransactions = (userId) => {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          "http://localhost/Crypto/get_transactions.php",
+          `${process.env.REACT_APP_API_BASE_URL}/get_transactions.php`,
           { user_id: userId }
         );
 
