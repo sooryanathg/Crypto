@@ -7,6 +7,7 @@ Crypto is a web application that uses React for the frontend and PHP with MySQL 
 - User authentication and authorization
 - Real-time cryptocurrency price tracking
 - Portfolio management
+- Crypto transaction
 - Transaction history
 
 ## Technologies Used
@@ -64,8 +65,10 @@ Crypto is a web application that uses React for the frontend and PHP with MySQL 
 ## Usage
 
 1. Register a new account or log in with existing credentials.
-2. Add your cryptocurrency investments to your portfolio.
-3. Track the real-time prices and manage your transactions.
+2. Create multiple wallets
+3. Add your cryptocurrency investments to your portfolio.
+4. You can transfer between wallets
+5. Track the real-time prices and manage your transactions.
 
 ## Contributing
 
