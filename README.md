@@ -53,6 +53,7 @@ Crypto is a web application that uses React for the frontend and PHP with MySQL 
 4. Set up the backend:
     - Start XAMPP and ensure Apache and MySQL are running.
     - Import the `crypto_system.sql` file into your MySQL database.
+    - Create necessary triggers by executing the triggers.sql file
     - Configure the database connection in `db.php`.
 
 5. Start the frontend development server:
